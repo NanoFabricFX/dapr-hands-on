@@ -1,99 +1,96 @@
-# Assignment 2 - Add Dapr service-to-service invocation
+# 作业 2 - 添加 Dapr service-to-service 调用
 
-## Assignment goals
+## 作业目标
 
-In order to complete this assignment, the following goals must be met:
+为了完成此任务，必须达到以下目标 :
 
-- The Government service is started running Dapr.
-- The TrafficControl service uses the Dapr client for .NET to call the GetVehicleInfo method on the Government service using a Dapr direct service-to-service invocation.
+- 使用 Dapr 运行Government service .
+- TrafficControl service 使用 Dapr .NET 客户端使用 Dapr service-to-service 调用  Government service 的GetVehicleInfo方法 
 
-### Step 1: Start the government service with Dapr
+### 步骤 1: 使用Dapr启动 government service 
 
-You started the government service in assignment 1 using `dotnet run`. When you want to run this service with a Dapr side-car that handles its communication, you need to start it using the Dapr CLI. There are a couple of things you need to specify when starting the service:
+您在作业1中使用`dotnet run` 启动了government service 。当您想通过Dapr Sidecar 处理该通信的行该服务时，您需要使用Dapr CLI启动它。启动服务时，需要指定以下几点：
 
-- The service needs a unique id which Dapr can use to find it. You will use `governmentservice` as the id.
-- The HTTP port the API is listening on is 6000. So you need to tell Dapr that (so it can handle the communication).
-- Dapr uses gRPC to communicate with the Dapr side-car. The port used for this communication is `50001` by default. But this port will be used by the TrafficControl service later, so we need to specify a different port for the Government service to prevent a port clash on the local machine. We will use port `50002`.
-- Finally you need to tell Dapr how to start the service. This is simply `dotnet run`.
+- 该服务需要一个唯一的ID，Dapr可以使用它来找到它. 我们将使用 `governmentservice` 作为Id.
+- API正在侦听的HTTP端口是6000。因此，您需要告知Dapr（以便它可以处理通信）
+- Dapr使用gRPC与Dapr侧车进行通信。默认情况下，用于此通信的端口是`50001`。但是此端口稍后将由TrafficControl服务使用，因此我们需要为Government服务指定其他端口，以防止本地计算机上的端口冲突。我们将使用端口`50002`。
+- 最后，您需要告诉Dapr如何启动该服务。这很简单，使用 `dotnet run`.
 
-You will use the `run` command of the Dapr CLI and specify all the options above on the command-line:
+您将使用Dapr CLI的命令 `run`，并在命令行上指定上述所有选项:
 
-1. Open a new command-shell window and go to the `Assignment02/src/GovernmentService` folder in this repo.
+1. 打开一个新的命令行窗口并转到仓库的文件夹 `Assignment02/src/GovernmentService` .
 
-2. enter the following command to run the service with a Dapr sidecar:
+2. 输入以下命令以使用 Dapr sidecar运行服务:
 
    ```
    dapr run --app-id governmentservice --app-port 6000 --dapr-grpc-port 50002 dotnet run
    ```
 
-3. Check the logs for any errors. As you can see, both Dapr as well as application logging is shown as output.
+3. 检查日志中是否有任何错误. 正如你所看到的, Dapr和应用程序日志记录都显示在控制台
 
-That's it, you're now running the Government service with a Dapr side-car. This means other services can use Dapr to call this service. This is what you'll do in the next step.
+就是这样，您现在正在使用Dapr Sidecar运行Government service。这意味着其他服务可以使用Dapr调用此服务。这是下一步要做的。
 
-## Step 2: Call the government service using service-to-service invocation
+## 步骤 2: 使用 service-to-service 调用government service 
 
-In this step, you're going to change the code of the TrafficControl service so it uses the Dapr client for .NET to call the government service.
+在此步骤中，您将更改TrafficControl服务的代码，以便它使用.NET的Dapr客户端来调用政府服务。
 
-First you're going to add a reference to the Dapr libraries for .NET:
+首先，您将添加对.NET的Dapr库的引用:
 
-1. Open the `Assignment 2` folder in this repo in VS Code.
+1. 使用 VS Code打开仓库的文件夹 `Assignment 2` 
 
-1. Open a new command-shell window and go to the `Assignment02/src/TrafficControlService` folder in this repo.
+1. 打开一个新的命令行窗口，然后转到该仓库中的文件夹 `Assignment02/src/TrafficControlService` .
 
-1. Add a reference to the Dapr ASP.NET Core integration library:
+1. 添加对Dapr ASP.NET Core集成库的引用:
 
    ```
-   dotnet add package Dapr.AspNetCore -v 1.0.0-rc02
+   dotnet add package Dapr.AspNetCore -v 1.0.0-rc03
    ```
 
-1. Restore all references:
+1. Restore 所有 references:
 
    ```
    dotnet restore
    ```
 
-Now you're going to use the Dapr client to make the call to the Government service:
+现在，您将使用Dapr 客户端调用 Government service:
 
-6. Open the file `Assignment02/src/TrafficControlService/Controllers/TrafficController.cs` in VS Code.
+6. 使用VS Code 打开文件 `Assignment02/src/TrafficControlService/Controllers/TrafficController.cs` .
 
-7. Add a using statements in this file to make sure you can use the Dapr client:
+7. 在此文件中添加using语句，以确保您可以使用Dapr客户端:
 
    ```csharp
    using Dapr.Client;
-   using Dapr.Client.Http;
    ```
 
-8. Change the client injected into the `VehicleEntry` method from the IHttpClientFactory to the DaprClient:
+8. 将注入到`VehicleEntry` 方法中的客户端从IHttpClientFactory更改为DaprClient :
 
    ```csharp
    public async Task<ActionResult> VehicleEntry(VehicleRegistered msg, [FromServices] DaprClient daprClient)
 
    ```
 
-9. Change the part where the vehicle information is being retrieved to use the Dapr client:
+9. 更改使用Dapr客户端获取车辆信息的部分:
 
    ```csharp
-   // get vehicle details
-   var vehicleInfo = await daprClient.InvokeMethodAsync<VehicleInfo>(
-      "governmentservice",
-      $"rdw/vehicle/{msg.LicenseNumber}",
-      new HttpInvocationOptions { Method = HttpMethod.Get });
+        // get vehicle details
+        var httpRequest = daprClient.CreateInvokeMethodRequest(HttpMethod.Get,"governmentservice",$"rdw/vehicle/{msg.LicenseNumber}");
+        var vehicleInfo = await daprClient.InvokeMethodAsync<VehicleInfo>(httpRequest);
    ```
 
-Now the Dapr client is used to directly call a method on the Government service. Dapr will figure out where the service lives and handle the communication.
+现在，Dapr客户端用于直接调用Government service上的方法。Dapr将找出服务所在的位置并处理通信。
 
-In order to make sure the Dapr client is injected into the VehicleEntry method, you need to register it in the Startup class:
+为了确保将Dapr客户端注入到VehicleEntry方法中，您需要在Startup类中注册它:
 
-10. Open the file `Assignment02/src/TrafficControlService/Startup.cs` in VS Code.
+10. 使用VS Code打开 文件 `Assignment02/src/TrafficControlService/Startup.cs` 
 
-11. Add using statements in this file to make sure you can use the Dapr client and the System.Text.Json serializer:
+11. 在此文件中添加using语句，以确保可以使用Dapr客户端和System.Text.Json序列化器 :
 
    ```csharp
    using Dapr.Client;
    using System.Text.Json;
    ```
 
-12. Add code at the end of the `ConfigureServices` method of the Startup class that registers the Dapr client:
+12. 在Startup类的 `ConfigureServices` 方法末尾添加代码注册Dapr客户端的 :
 
    ```csharp
    services.AddDaprClient(builder => builder.UseJsonSerializationOptions(new JsonSerializerOptions()
@@ -103,51 +100,51 @@ In order to make sure the Dapr client is injected into the VehicleEntry method, 
    }));
    ```
 
-   As you can see, a builder is specified to create the Dapr client. The JsonSerializer options the Dapr client must use for serializing and deserializing messages is passed in as an argument.
+  如您所见，指定了一个构建器来创建Dapr客户端。Dapr客户端必须用于序列化和反序列化消息的JsonSerializer选项作为参数传递。 
 
-## Step 3: Test the application
+## 步骤 3: 测试应用程序
 
-Now you're going to start the TrafficControl service with a Dapr side-car:
+现在，您将使用Dapr边车启动TrafficControl服务:
 
-1. Make sure the Government service is (still) running with the Dapr side-car (as you did in step 1).
+1. 确保 Government service 仍然在Dapr 边车上运行(与步骤1相同).
 
-2. Open a new command-shell window and go to the `Assignment02/src/TrafficControlService` folder in this repo.
+2. 打开一个新的命令行窗口，然后转到该仓库中的文件夹 `Assignment02/src/TrafficControlService` .
 
-3. Check all your code-changes are correct by building the code:
+3. 通过构建代码来检查所有代码更改是否正确:
 
    ```
    dotnet build
    ```
 
-   If you see any warnings or errors, review the previous steps to make sure the code is correct.
+   如果看到任何警告或错误，请查看前面的步骤以确保代码正确。
 
-4. Start the TrafficControl service with a Dapr side-car. The default gRPC port used for communication with the Dapr side-car is `50001`. If you use this port to run the side-car, you don't need to specify a port in your code when doing the service-to-service invocation. Specify this port when starting the service with Dapr:
+4. 使用Dapr side-car启动TrafficControl服务。与Dapr Sidecar通信的默认gRPC端口为50001。如果使用此端口运行边车，则在进行服务到服务的调用时无需在代码中指定端口。使用Dapr启动服务时，请指定此端口：
 
    ```
    dapr run --app-id trafficcontrolservice --app-port 5000 --dapr-grpc-port 50001 dotnet run
    ```
 
-The services are up & running. Now you're going to test this using the simulation.
+服务已启动并正在运行。现在，您将使用仿真对此进行测试.
 
-5. Open a new command-shell window and go to the `Assignment02/src/Simulation` folder in this repo.
+5. 打开一个新的命令行窗口，然后转到该仓库中的文件夹 `Assignment02/src/Simulation` 
 
-6. Start the simulation:
+6. 启动模拟程序:
 
    ```
    dotnet run
    ```
 
-You should see similar logging as before when you ran the application.
+运行应用程序时，您应该会看到与以前类似的日志记录.
 
-## Step 4: Use Dapr observability
+## 步骤 4: 使用 Dapr 可观测性
 
-So how can you check whether or not the call to the Government service is handled by Dapr? Well, Dapr has some observability built in. You can look at Dapr traffic using Zipkin:
+那么，如何检查Dapr的Government service 调用是否已处理？好吧，Dapr内置了一些可观察性。您可以使用Zipkin查看Dapr流量:
 
-1. Open a browser and go the this url: [http://localhost:9411/zipkin](http://localhost:9411/zipkin).
+1. 打开浏览器，然后转到以下URL: [http://localhost:9411/zipkin](http://localhost:9411/zipkin).
 
-2. Click the spyglass icon in the top right of the screen to search for traces.
+2. 单击屏幕右上方的望远镜图标以搜索痕迹.
 
-3. You should see calls coming into the Government service. You can click any entry to get more details:
+3. 您应该会看到有调用打入Government service。您可以单击任何条目以获取更多详细信息 :
 
    ![](img/zipkin-traces.png)
 

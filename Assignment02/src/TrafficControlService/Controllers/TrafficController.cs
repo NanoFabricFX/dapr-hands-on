@@ -8,6 +8,9 @@ using TrafficControlService.Events;
 using TrafficControlService.Helpers;
 using TrafficControlService.Models;
 using TrafficControlService.Repositories;
+using Dapr.Client;
+using System.Net.Http.Json;
+
 
 namespace TrafficControlService.Controllers
 {
@@ -37,13 +40,12 @@ namespace TrafficControlService.Controllers
         }
 
         [HttpPost("entrycam")]
-        public async Task<ActionResult> VehicleEntry(VehicleRegistered msg, [FromServices] IHttpClientFactory httpClientFactory)
+        public async Task<ActionResult> VehicleEntry(VehicleRegistered msg)
         {
             // get vehicle details
-            var httpClient = httpClientFactory.CreateClient();
-            var response = await httpClient.GetAsync($"http://localhost:6000/rdw/vehicle/{msg.LicenseNumber}");
-            using var responseStream = await response.Content.ReadAsStreamAsync();
-            var vehicleInfo = await JsonSerializer.DeserializeAsync<VehicleInfo>(responseStream, _jsonSerializerOptions);
+             var client = DaprClient.CreateInvokeHttpClient(appId: "governmentservice");
+             var response = await client.GetAsync($"rdw/vehicle/{msg.LicenseNumber}");
+             var vehicleInfo = await response.Content.ReadFromJsonAsync<VehicleInfo>();
 
             // log entry
             _logger.LogInformation($"ENTRY detected in lane {msg.Lane} at {msg.Timestamp.ToString("hh:mm:ss")}: " +

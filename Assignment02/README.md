@@ -1,39 +1,40 @@
-# Assignment 2 - Add Dapr service-to-service invocation
+# 作业 2 - Add Dapr service-to-service invocation
 
-In this assignment, you're going to add Dapr into the mix. You will use the **Service-to-service Invocation** building-block.
+在此作业中，您将把Dapr添加到混合中。您将使用 **Service-to-service 调用** 构建块.
 
-## Dapr Service-to-service invocation building block
+## Dapr Service-to-service 调用构建块
 
-In a microservices application, it is important to be able to communicate with other services without knowing where they live. Especially when the services are running in Kubernetes (or some other orchestration platform), services can be moved around and replaced with a new version all the time. This is where the Dapr service-to-service building block comes in. It works like this:
+在微服务应用程序中，重要的是能够与其他服务通信而不需要知道它们在哪里。尤其是当服务在Kubernetes（或某些其他编排平台）中运行时，可以随时移动服务并用新版本替换服务。这就是Dapr服务到服务构建块的作用所在。它的工作方式如下：
+
 
 ![](img/service-invocation.png)
 
-1. Service A makes a http/gRPC call meant for Service B.  The call goes to the local Dapr sidecar.
-2. Dapr discovers Service B's location and forwards the message to Service B's Dapr sidecar
-3. Service B's Dapr sidecar forwards the request to Service B.  Service B performs its corresponding business logic.
-4. Service B sends a response for Service A.  The response goes to Service B's sidecar.
-5. Dapr forwards the response to Service A's Dapr sidecar.
-6. Service A receives the response.
+1. 服务A进行了针对服务B的 http/gRPC调用.  这些调用通过本地的 Dapr sidecar.
+2. Dapr 发现服务B的位置并将消息转发到服务B的 Dapr sidecar
+3. 服务B的Dapr边车将请求转发给服务B。服务B执行其相应的业务逻辑.
+4. 服务B发送对服务A的响应。该响应来自服务B的 sidecar. 
+5. Dapr 转发响应到 服务A's Dapr sidecar.
+6. 服务 A 收到响应.
 
-For this hands-on assignment, this is all you need to know about this building-block. If you want to get more detailed information, read the [introduction to this building-block](https://github.com/dapr/docs/blob/master/concepts/service-invocation/README.md) in the Dapr documentation.
+对于本作业动手作业，这是您需要了解的所有关于此构建基块的信息。如果您想获取更多详细信息，请阅读Dapr文档中[introduction to this building-block](https://github.com/dapr/docs/blob/master/concepts/service-invocation/README.md)
 
-## Assignment goals
+## 作业目标
 
-In order to complete this assignment, the following goals must be met:
+为了完成此任务，必须达到以下目标 :
 
-- The Government service is started running Dapr.
-- The TrafficControl service uses the Dapr client for .NET to call the GetVehicleInfo method on the Government service using a Dapr direct service-to-service invocation.
+- 使用 Dapr 运行Government service .
+- TrafficControl service 使用 Dapr .NET 客户端使用 Dapr service-to-service 调用  Government service 的GetVehicleInfo方法 
 
-## DIY instructions
+## DIY 说明
 
-First open the `Assignment 2` folder in this repo in VS Code. Then open the [Dapr documentation](https://github.com/dapr/docs) and start hacking away. Make sure the Government service is using `50001` as the dapr-grpc-port. If you need any hints, you may peek in the step-by-step part.
+首先使用VS Code 打开此仓库中文件夹 `Assignment 2` . 然后打开 [Dapr documentation](https://github.com/dapr/docs) 并开始旅程. 确保 Government service 使用端口 `50001` 作为 dapr-grpc-port. 如果你需要提示, 请查看 step-by-step 部分.
 
-## Step by step instructions
+## Step by step 说明
 
-To get step-by-step instructions to achieve the goals, open the [step-by-step instructions](step-by-step.md).
+要获取实现 目标的 step-by-step 说明, 请打开 [step-by-step 说明](step-by-step.md).
 
-## Next assignment
+## 下一个作业
 
-Make sure you stop all running processes before proceeding to the next assignment.
+在进行下一个作业之前，请确保停止所有正在运行的进程。
 
-Go to [assignment 3](../Assignment03/README.md).
+转到 [作业 3](../Assignment03/README.md).
